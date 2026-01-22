@@ -342,6 +342,23 @@ export function RecurringExpenses() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Next Due Date */}
+      <div>
+        <Label htmlFor="recurring-next-due">Next Due Date (optional)</Label>
+        <Input
+          id="recurring-next-due"
+          type="date"
+          value={formData.next_due_date || ''}
+          onChange={(e) =>
+            setFormData((prev) => ({
+              ...prev,
+              next_due_date: e.target.value || null,
+            }))
+          }
+          className="mt-1"
+        />
+      </div>
     </div>
   );
 
