@@ -18,10 +18,6 @@ import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-const ENABLED =
-  process.env.NODE_ENV !== 'production' ||
-  process.env.NEXT_PUBLIC_ENABLE_DEV_TOOLS === 'true';
-
 const DELETE_ALL_UUID_SENTINEL = '00000000-0000-0000-0000-000000000000';
 
 async function deleteAllRows(table: string) {
@@ -62,8 +58,6 @@ export function DevTools() {
   const [open, setOpen] = useState(false);
   const [unlock, setUnlock] = useState('');
   const [busyKey, setBusyKey] = useState<string | null>(null);
-
-  if (!ENABLED) return null;
 
   const unlocked = unlock.trim().toUpperCase() === 'RESET';
 
@@ -210,4 +204,3 @@ export function DevTools() {
     </>
   );
 }
-
