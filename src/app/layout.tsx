@@ -4,6 +4,7 @@ import './globals.css';
 import { Providers } from '@/components/providers';
 import { Sidebar } from '@/components/sidebar';
 import { Toaster } from '@/components/ui/sonner';
+import { DevTools } from '@/components/dev/dev-tools';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -37,6 +38,7 @@ export default function RootLayout({
               <div className="container mx-auto max-w-7xl p-6">{children}</div>
             </main>
           </div>
+          <DevTools />
           <Toaster />
         </Providers>
       </body>
