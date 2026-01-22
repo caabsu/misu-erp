@@ -21,6 +21,14 @@ interface AnalyticsData {
   vendorTotals: VendorTotal[];
 }
 
+type VendorJoin = { name: string } | { name: string }[] | null;
+
+interface ExpenseAnalyticsRow {
+  amount: number;
+  category: ExpenseCategory;
+  vendors: VendorJoin;
+}
+
 export function useAnalyticsData({
   startDate,
   endDate,
@@ -43,17 +51,24 @@ export function useAnalyticsData({
 
       if (error) throw error;
 
-      const totalSpend = (data || []).reduce(
-        (sum, expense) => sum + (expense.amount || 0),
-        0
-      );
+      // Supabase's select-string type inference can treat joins as arrays in TS
+      // even when the relationship is many-to-one. Normalize here for safety.
+      const rows = (data || []) as unknown as ExpenseAnalyticsRow[];
+
+      const totalSpend = rows.reduce((sum, expense) => sum + (expense.amount || 0), 0);
 
       const categoryMap = new Map<ExpenseCategory, number>();
       const vendorMap = new Map<string, number>();
 
-      for (const expense of data || []) {
+      for (const expense of rows) {
         const category = expense.category as ExpenseCategory;
-        const vendorName = expense.vendors?.name || 'Unassigned';
+        const vendors = expense.vendors;
+        const vendorName = !vendors
+          ? 'Unassigned'
+          : Array.isArray(vendors)
+            ? vendors[0]?.name || 'Unassigned'
+            : vendors.name || 'Unassigned';
+
         categoryMap.set(category, (categoryMap.get(category) || 0) + expense.amount);
         vendorMap.set(vendorName, (vendorMap.get(vendorName) || 0) + expense.amount);
       }
