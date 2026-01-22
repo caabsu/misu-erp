@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAnalyticsData } from '@/lib/hooks/use-analytics';
-import { Buildings } from 'lucide-react';
+import { Building } from 'lucide-react';
 
 const formatCurrency = (value: number) =>
   `$${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -30,7 +30,7 @@ export function VendorConcentration({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Buildings className="h-4 w-4 text-stone-700" />
+            <Building className="h-4 w-4 text-stone-700" />
             Vendor Concentration
           </CardTitle>
         </CardHeader>
@@ -61,7 +61,7 @@ export function VendorConcentration({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Buildings className="h-4 w-4 text-stone-700" />
+            <Building className="h-4 w-4 text-stone-700" />
             Vendor Concentration
           </CardTitle>
         </CardHeader>
@@ -78,7 +78,7 @@ export function VendorConcentration({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <Buildings className="h-4 w-4 text-stone-700" />
+          <Building className="h-4 w-4 text-stone-700" />
           Vendor Concentration
         </CardTitle>
       </CardHeader>
