@@ -176,38 +176,38 @@ export function ProductTable() {
     );
   }
 
-  const ProductForm = () => (
+  const productFormContent = (
     <div className="grid gap-4 py-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
-          <Label htmlFor="name">Product Name *</Label>
+          <Label htmlFor="product-name">Product Name *</Label>
           <Input
-            id="name"
+            id="product-name"
             placeholder="e.g., Misu Starter Kit"
             value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
             className="mt-1"
           />
         </div>
         <div>
-          <Label htmlFor="sku">SKU</Label>
+          <Label htmlFor="product-sku">SKU</Label>
           <Input
-            id="sku"
+            id="product-sku"
             placeholder="e.g., MSK-001"
             value={formData.sku || ''}
-            onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, sku: e.target.value }))}
             className="mt-1"
           />
         </div>
         <div>
-          <Label htmlFor="stock">Current Stock</Label>
+          <Label htmlFor="product-stock">Current Stock</Label>
           <Input
-            id="stock"
+            id="product-stock"
             type="number"
             min="0"
             value={formData.current_stock || 0}
             onChange={(e) =>
-              setFormData({ ...formData, current_stock: parseInt(e.target.value) || 0 })
+              setFormData((prev) => ({ ...prev, current_stock: parseInt(e.target.value) || 0 }))
             }
             className="mt-1"
           />
@@ -218,7 +218,7 @@ export function ProductTable() {
         <p className="mb-3 text-sm font-medium text-stone-700">Pricing</p>
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <Label htmlFor="cost" className="text-xs text-stone-500">
+            <Label htmlFor="product-cost" className="text-xs text-stone-500">
               Cost Price
             </Label>
             <div className="relative mt-1">
@@ -226,24 +226,24 @@ export function ProductTable() {
                 $
               </span>
               <Input
-                id="cost"
+                id="product-cost"
                 type="number"
                 min="0"
                 step="0.01"
                 placeholder="0.00"
-                value={formData.cost_price || ''}
+                value={formData.cost_price ?? ''}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
+                  setFormData((prev) => ({
+                    ...prev,
                     cost_price: e.target.value ? parseFloat(e.target.value) : null,
-                  })
+                  }))
                 }
                 className="pl-7"
               />
             </div>
           </div>
           <div>
-            <Label htmlFor="retail" className="text-xs text-stone-500">
+            <Label htmlFor="product-retail" className="text-xs text-stone-500">
               Retail Price
             </Label>
             <div className="relative mt-1">
@@ -251,24 +251,24 @@ export function ProductTable() {
                 $
               </span>
               <Input
-                id="retail"
+                id="product-retail"
                 type="number"
                 min="0"
                 step="0.01"
                 placeholder="0.00"
-                value={formData.retail_price || ''}
+                value={formData.retail_price ?? ''}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
+                  setFormData((prev) => ({
+                    ...prev,
                     retail_price: e.target.value ? parseFloat(e.target.value) : null,
-                  })
+                  }))
                 }
                 className="pl-7"
               />
             </div>
           </div>
           <div>
-            <Label htmlFor="wholesale" className="text-xs text-stone-500">
+            <Label htmlFor="product-wholesale" className="text-xs text-stone-500">
               Wholesale Price
             </Label>
             <div className="relative mt-1">
@@ -276,17 +276,17 @@ export function ProductTable() {
                 $
               </span>
               <Input
-                id="wholesale"
+                id="product-wholesale"
                 type="number"
                 min="0"
                 step="0.01"
                 placeholder="0.00"
-                value={formData.wholesale_price || ''}
+                value={formData.wholesale_price ?? ''}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
+                  setFormData((prev) => ({
+                    ...prev,
                     wholesale_price: e.target.value ? parseFloat(e.target.value) : null,
-                  })
+                  }))
                 }
                 className="pl-7"
               />
@@ -431,7 +431,7 @@ export function ProductTable() {
             <DialogTitle>Add Product</DialogTitle>
             <DialogDescription>Add a new product to your inventory</DialogDescription>
           </DialogHeader>
-          <ProductForm />
+          {productFormContent}
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddDialog(false)}>
               Cancel
@@ -450,7 +450,7 @@ export function ProductTable() {
             <DialogTitle>Edit Product</DialogTitle>
             <DialogDescription>Update product details</DialogDescription>
           </DialogHeader>
-          <ProductForm />
+          {productFormContent}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingProduct(null)}>
               Cancel

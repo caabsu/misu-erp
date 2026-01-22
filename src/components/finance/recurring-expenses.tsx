@@ -187,7 +187,7 @@ export function RecurringExpenses() {
   const totals = rules ? calculateRecurringTotals(rules) : { monthlyTotal: 0, annualTotal: 0 };
   const selectedVendor = vendors?.find((v) => v.id === formData.vendor_id);
 
-  const RuleForm = () => (
+  const ruleFormContent = (
     <div className="grid gap-4 py-4">
       {/* Vendor */}
       <div>
@@ -214,7 +214,7 @@ export function RecurringExpenses() {
                       key={vendor.id}
                       value={vendor.name}
                       onSelect={() => {
-                        setFormData({ ...formData, vendor_id: vendor.id });
+                        setFormData((prev) => ({ ...prev, vendor_id: vendor.id }));
                         setVendorOpen(false);
                       }}
                     >
@@ -263,12 +263,12 @@ export function RecurringExpenses() {
 
       {/* Description */}
       <div>
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="recurring-description">Description</Label>
         <Input
-          id="description"
+          id="recurring-description"
           placeholder="e.g., Monthly software subscription"
           value={formData.description || ''}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
           className="mt-1"
         />
       </div>
@@ -276,18 +276,18 @@ export function RecurringExpenses() {
       <div className="grid grid-cols-2 gap-4">
         {/* Amount */}
         <div>
-          <Label htmlFor="amount">Amount</Label>
+          <Label htmlFor="recurring-amount">Amount</Label>
           <div className="relative mt-1">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">$</span>
             <Input
-              id="amount"
+              id="recurring-amount"
               type="number"
               min="0"
               step="0.01"
               placeholder="0.00"
               value={formData.amount || ''}
               onChange={(e) =>
-                setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })
+                setFormData((prev) => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))
               }
               className="pl-7"
             />
@@ -299,7 +299,7 @@ export function RecurringExpenses() {
           <Label>Frequency</Label>
           <Select
             value={formData.frequency}
-            onValueChange={(v) => setFormData({ ...formData, frequency: v as 'monthly' | 'yearly' })}
+            onValueChange={(v) => setFormData((prev) => ({ ...prev, frequency: v as 'monthly' | 'yearly' }))}
           >
             <SelectTrigger className="mt-1">
               <SelectValue />
@@ -317,7 +317,7 @@ export function RecurringExpenses() {
         <Label>Category</Label>
         <Select
           value={formData.category}
-          onValueChange={(v) => setFormData({ ...formData, category: v as ExpenseCategory })}
+          onValueChange={(v) => setFormData((prev) => ({ ...prev, category: v as ExpenseCategory }))}
         >
           <SelectTrigger className="mt-1">
             <SelectValue />
@@ -481,7 +481,7 @@ export function RecurringExpenses() {
               Set up a monthly or annual recurring payment
             </DialogDescription>
           </DialogHeader>
-          <RuleForm />
+          {ruleFormContent}
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddDialog(false)}>
               Cancel
@@ -500,7 +500,7 @@ export function RecurringExpenses() {
             <DialogTitle>Edit Recurring Expense</DialogTitle>
             <DialogDescription>Update recurring payment details</DialogDescription>
           </DialogHeader>
-          <RuleForm />
+          {ruleFormContent}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingRule(null)}>
               Cancel
