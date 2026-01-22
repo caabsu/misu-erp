@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type {
   Component,
+  ComponentInsert,
   Product,
   ProductWithBOM,
   ProductBOMWithComponent,
@@ -18,6 +19,139 @@ export function useComponents() {
         .order('name');
       if (error) throw error;
       return data as Component[];
+    },
+  });
+}
+
+// Fetch BOM for a specific product
+export function useProductBOM(productId?: string) {
+  return useQuery({
+    queryKey: ['product-bom', productId],
+    enabled: !!productId,
+    queryFn: async () => {
+      if (!productId) return [];
+      const { data, error } = await supabase
+        .from('product_bom')
+        .select('*, components (*)')
+        .eq('product_id', productId);
+      if (error) throw error;
+      return data as ProductBOMWithComponent[];
+    },
+  });
+}
+
+// Create a component
+export function useCreateComponent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (component: ComponentInsert) => {
+      const { data, error } = await supabase
+        .from('components')
+        .insert(component)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Component;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['components'] });
+    },
+  });
+}
+
+// Update a component
+export function useUpdateComponent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      updates,
+    }: {
+      id: string;
+      updates: Partial<ComponentInsert>;
+    }) => {
+      const { data, error } = await supabase
+        .from('components')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Component;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['components'] });
+    },
+  });
+}
+
+// Update component stock
+export function useUpdateComponentStock() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      componentId,
+      quantity,
+      operation,
+    }: {
+      componentId: string;
+      quantity: number;
+      operation: 'add' | 'subtract' | 'set';
+    }) => {
+      const { data: component, error: fetchError } = await supabase
+        .from('components')
+        .select('current_stock')
+        .eq('id', componentId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const currentStock = (component as { current_stock: number }).current_stock || 0;
+      let newStock: number;
+
+      switch (operation) {
+        case 'add':
+          newStock = currentStock + quantity;
+          break;
+        case 'subtract':
+          newStock = Math.max(0, currentStock - quantity);
+          break;
+        case 'set':
+          newStock = quantity;
+          break;
+      }
+
+      const { error: updateError } = await supabase
+        .from('components')
+        .update({ current_stock: newStock })
+        .eq('id', componentId);
+
+      if (updateError) throw updateError;
+      return newStock;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['components'] });
+    },
+  });
+}
+
+// Delete a component
+export function useDeleteComponent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (componentId: string) => {
+      const { error } = await supabase
+        .from('components')
+        .delete()
+        .eq('id', componentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['components'] });
     },
   });
 }

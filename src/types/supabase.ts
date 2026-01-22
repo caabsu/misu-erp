@@ -122,6 +122,25 @@ export interface ProductWithBOM extends Product {
   product_bom: ProductBOMWithComponent[];
 }
 
+export interface AnalyticsMonthlyMetric {
+  id: string;
+  month: string;
+  new_subscribers: number;
+  active_subscribers: number;
+  churned_subscribers: number;
+  total_revenue: number;
+  marketing_spend: number;
+}
+
+export interface AnalyticsMonthlyMetricInsert {
+  month: string;
+  new_subscribers?: number;
+  active_subscribers?: number;
+  churned_subscribers?: number;
+  total_revenue?: number;
+  marketing_spend?: number;
+}
+
 // Category types
 export type ExpenseCategory = 'OpEx' | 'COGS' | 'Marketing';
 
@@ -158,6 +177,11 @@ export interface Database {
         Row: ProductBOM;
         Insert: Partial<ProductBOM>;
         Update: Partial<ProductBOM>;
+      };
+      analytics_monthly_metrics: {
+        Row: AnalyticsMonthlyMetric;
+        Insert: AnalyticsMonthlyMetricInsert;
+        Update: Partial<AnalyticsMonthlyMetricInsert>;
       };
     };
   };

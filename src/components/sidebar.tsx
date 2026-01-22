@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Wallet,
   Package,
+  Users,
   Settings,
   Link as LinkIcon,
   Megaphone,
@@ -22,7 +23,8 @@ import {
 const mainNavItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/finance', label: 'Finance', icon: Wallet },
-  { href: '/inventory', label: 'Products', icon: Package },
+  { href: '/subscriptions', label: 'Subscriptions', icon: Users },
+  { href: '/inventory', label: 'Inventory', icon: Package },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 

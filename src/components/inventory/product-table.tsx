@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Package, MoreHorizontal } from 'lucide-react';
+import { Plus, Pencil, Trash2, Package, MoreHorizontal, Wrench } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,9 +35,11 @@ import {
   useUpdateStock,
   useDeleteProduct,
 } from '@/lib/hooks/use-products';
+import { useProductBOM } from '@/lib/hooks/use-inventory';
+import { useAssembler } from '@/lib/hooks/use-assembler';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import type { Product, ProductInsert } from '@/types/supabase';
+import type { Product, ProductBOMWithComponent, ProductInsert } from '@/types/supabase';
 
 const formatCurrency = (value: number | null) => {
   if (value === null || value === undefined) return '-';
@@ -47,6 +49,19 @@ const formatCurrency = (value: number | null) => {
 const calculateMargin = (retail: number | null, cost: number | null) => {
   if (!retail || !cost || cost === 0) return null;
   return ((retail - cost) / retail) * 100;
+};
+
+const getMaxAssemblable = (bom: ProductBOMWithComponent[] | undefined) => {
+  if (!bom || bom.length === 0) return 0;
+  let maxUnits = Infinity;
+  for (const item of bom) {
+    if (!item.components || !item.quantity_required) continue;
+    const canMake = Math.floor(
+      item.components.current_stock / item.quantity_required
+    );
+    maxUnits = Math.min(maxUnits, canMake);
+  }
+  return maxUnits === Infinity ? 0 : maxUnits;
 };
 
 export function ProductTable() {
@@ -61,6 +76,10 @@ export function ProductTable() {
   const [stockProduct, setStockProduct] = useState<Product | null>(null);
   const [stockQuantity, setStockQuantity] = useState('');
   const [stockOperation, setStockOperation] = useState<'add' | 'subtract' | 'set'>('add');
+  const [assembleProduct, setAssembleProduct] = useState<Product | null>(null);
+  const [assembleQuantity, setAssembleQuantity] = useState('');
+  const { data: bomItems, isLoading: bomLoading } = useProductBOM(assembleProduct?.id);
+  const assembleMutation = useAssembler();
 
   // Form state
   const [formData, setFormData] = useState<ProductInsert>({
@@ -151,6 +170,41 @@ export function ProductTable() {
       toast.success('Product deleted');
     } catch {
       toast.error('Failed to delete product');
+    }
+  };
+
+  const handleAssemble = async () => {
+    if (!assembleProduct || !assembleQuantity) return;
+
+    const quantity = parseInt(assembleQuantity, 10);
+    if (isNaN(quantity) || quantity <= 0) {
+      toast.error('Please enter a valid quantity');
+      return;
+    }
+
+    if (!bomItems || bomItems.length === 0) {
+      toast.error('No BOM defined for this product');
+      return;
+    }
+
+    const maxAssemblable = getMaxAssemblable(bomItems);
+    if (quantity > maxAssemblable) {
+      toast.error('Insufficient Raw Materials');
+      return;
+    }
+
+    try {
+      await assembleMutation.mutateAsync({
+        productId: assembleProduct.id,
+        quantity,
+        bom: bomItems,
+      });
+      toast.success(`Assembled ${quantity} units of ${assembleProduct.name}`);
+      setAssembleProduct(null);
+      setAssembleQuantity('');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to assemble product';
+      toast.error(message);
     }
   };
 
@@ -297,6 +351,9 @@ export function ProductTable() {
     </div>
   );
 
+  const maxAssemblable = getMaxAssemblable(bomItems);
+  const assembleQty = parseInt(assembleQuantity, 10);
+
   return (
     <>
       <div className="mb-4 flex items-center justify-between">
@@ -402,6 +459,18 @@ export function ProductTable() {
                             >
                               <Pencil className="h-4 w-4" />
                               Edit
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="justify-start gap-2"
+                              onClick={() => {
+                                setAssembleProduct(product);
+                                setAssembleQuantity('');
+                              }}
+                            >
+                              <Wrench className="h-4 w-4" />
+                              Assemble
                             </Button>
                             <Button
                               variant="ghost"
@@ -517,6 +586,125 @@ export function ProductTable() {
             </Button>
             <Button onClick={handleStockUpdate} disabled={stockMutation.isPending}>
               {stockMutation.isPending ? 'Updating...' : 'Update Stock'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assemble Product Dialog */}
+      <Dialog
+        open={!!assembleProduct}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAssembleProduct(null);
+            setAssembleQuantity('');
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Assemble {assembleProduct?.name}</DialogTitle>
+            <DialogDescription>
+              Build finished goods from raw materials
+            </DialogDescription>
+          </DialogHeader>
+
+          {bomLoading ? (
+            <div className="flex h-32 items-center justify-center">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-stone-300 border-t-stone-900" />
+            </div>
+          ) : !bomItems || bomItems.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-stone-200 bg-stone-50 p-4 text-sm text-stone-600">
+              No BOM defined for this product yet.
+            </div>
+          ) : (
+            <div className="py-2">
+              <div className="mb-4 rounded-lg bg-stone-50 p-3">
+                <p className="mb-2 text-sm font-medium text-stone-700">
+                  Materials required per unit:
+                </p>
+                <ul className="space-y-1">
+                  {bomItems.map((item) => (
+                    <li
+                      key={item.id}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <span className="text-stone-600">
+                        {item.components?.name}
+                      </span>
+                      <span className="font-mono text-stone-500">
+                        {item.quantity_required}{' '}
+                        {item.components?.unit_type || 'units'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <Label htmlFor="assemble-quantity">How many units to build?</Label>
+              <Input
+                id="assemble-quantity"
+                type="number"
+                min="1"
+                max={maxAssemblable}
+                placeholder="Enter quantity"
+                value={assembleQuantity}
+                onChange={(e) => setAssembleQuantity(e.target.value)}
+                className="mt-2"
+              />
+              <p className="mt-1 text-xs text-stone-500">
+                Maximum: {maxAssemblable} units based on available materials
+              </p>
+
+              {assembleQty > 0 && (
+                <div className="mt-4 rounded-lg border border-stone-200 p-3">
+                  <p className="mb-2 text-sm font-medium text-stone-700">
+                    Materials to be used:
+                  </p>
+                  <ul className="space-y-1">
+                    {bomItems.map((item) => {
+                      const required = (item.quantity_required || 0) * assembleQty;
+                      return (
+                        <li
+                          key={item.id}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <span className="text-stone-600">
+                            {item.components?.name}
+                          </span>
+                          <span className="font-mono text-rose-600">
+                            -{required} {item.components?.unit_type || 'units'}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAssembleProduct(null);
+                setAssembleQuantity('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAssemble}
+              disabled={
+                assembleMutation.isPending ||
+                bomLoading ||
+                !bomItems ||
+                bomItems.length === 0 ||
+                !assembleQuantity
+              }
+            >
+              {assembleMutation.isPending ? 'Assembling...' : 'Confirm Assembly'}
             </Button>
           </DialogFooter>
         </DialogContent>
