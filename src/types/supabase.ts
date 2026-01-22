@@ -43,10 +43,27 @@ export interface ExpenseWithVendor extends Expense {
 export interface RecurringRule {
   id: string;
   vendor_id: string | null;
-  amount: number | null;
-  frequency: 'monthly' | 'yearly' | null;
+  description: string | null;
+  amount: number;
+  category: ExpenseCategory;
+  frequency: 'monthly' | 'yearly';
   next_due_date: string | null;
   active: boolean;
+  created_at: string;
+}
+
+export interface RecurringRuleInsert {
+  vendor_id?: string | null;
+  description?: string | null;
+  amount: number;
+  category: ExpenseCategory;
+  frequency: 'monthly' | 'yearly';
+  next_due_date?: string | null;
+  active?: boolean;
+}
+
+export interface RecurringRuleWithVendor extends RecurringRule {
+  vendors: Vendor | null;
 }
 
 export interface Component {
@@ -71,7 +88,11 @@ export interface Product {
   name: string;
   sku: string | null;
   current_stock: number;
-  sale_price: number | null;
+  // Pricing tiers
+  cost_price: number | null;      // Cost to produce/acquire (COGS)
+  retail_price: number | null;    // Standard retail price
+  wholesale_price: number | null; // Bulk/wholesale price
+  sale_price: number | null;      // Legacy/promotional price
   sop_markdown: string | null;
 }
 
@@ -79,6 +100,9 @@ export interface ProductInsert {
   name: string;
   sku?: string | null;
   current_stock?: number;
+  cost_price?: number | null;
+  retail_price?: number | null;
+  wholesale_price?: number | null;
   sale_price?: number | null;
   sop_markdown?: string | null;
 }
