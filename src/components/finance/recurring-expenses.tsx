@@ -147,19 +147,30 @@ export function RecurringExpenses() {
       return;
     }
 
+    const payload: RecurringRuleInsert = {
+      ...formData,
+      // Treat empty strings as unset values for optional fields.
+      vendor_id: formData.vendor_id || null,
+      description: formData.description?.trim() ? formData.description.trim() : null,
+    };
+
     try {
       if (editingRule) {
-        await updateMutation.mutateAsync({ id: editingRule.id, updates: formData });
+        await updateMutation.mutateAsync({ id: editingRule.id, updates: payload });
         toast.success('Recurring expense updated');
         setEditingRule(null);
       } else {
-        await createMutation.mutateAsync(formData);
+        await createMutation.mutateAsync(payload);
         toast.success('Recurring expense created');
         setShowAddDialog(false);
       }
       resetForm();
-    } catch {
-      toast.error('Failed to save recurring expense');
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === 'object' && 'message' in err
+          ? String((err as { message: unknown }).message)
+          : 'Failed to save recurring expense';
+      toast.error(message);
     }
   };
 
@@ -412,7 +423,7 @@ export function RecurringExpenses() {
                     <TableCell>
                       <div>
                         <p className="font-medium text-stone-900">
-                          {rule.vendors?.name || 'Unknown'}
+                          {rule.vendors?.name || 'Unassigned'}
                         </p>
                         {rule.description && (
                           <p className="text-xs text-stone-500">{rule.description}</p>
